@@ -61,9 +61,10 @@ typedef struct {
 
 typedef struct {
 	bool overflow;
-	/* persistent; key = "<kind>:<value>" encoding (i:5, s:asc, f:<repr>, e:Class::CASE),
-	 * value = count. Encoding is internal; JSON emits [kind, value, count]. */
-	HashTable *values;
+	/* persistent; value = count, literal_cap applies to the total over all three. Split by kind
+	 * so the hot kinds need no key formatting: ints = integer key (non-packed); strs = the string
+	 * bytes; other = "f:<16 hex of IEEE bits>" / "e:Class::CASE". JSON emits [kind, value, count]. */
+	HashTable *ints, *strs, *other;
 } tt_literal_stats;
 
 struct _tt_acc {

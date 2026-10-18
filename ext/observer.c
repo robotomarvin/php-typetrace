@@ -17,6 +17,11 @@
  *    not-passed params are UNDEF. Named-arg skipped params are already default-filled
  *    (indistinguishable from passed values).
  *  - at end CVs are still alive (by-ref params are IS_REFERENCE).
+ *
+ * Hot path: begin resolves the record through two op_array extension slots in the run-time
+ * cache ({tt_func*, epoch}); the cache is zeroed whenever the engine (re)creates it, and the
+ * epoch is bumped at RINIT and on registry reset, so a stale pointer is never followed. The
+ * frame stack carries the record to end, so end does no lookup either.
  */
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -27,6 +32,7 @@
 #include <unistd.h>
 
 #include "php.h"
+#include "zend_extensions.h"
 #include "zend_observer.h"
 #include "zend_vm_opcodes.h"
 #include "php_typetrace.h"
@@ -39,7 +45,8 @@
 
 typedef struct {
 	zend_execute_data *ex;
-	bool sampled;
+	tt_func *f;                      /* NULL = not sampled */
+	uintptr_t epoch;
 } tt_frame;
 
 typedef struct {
@@ -54,6 +61,9 @@ ZEND_TLS uint64_t tt_rng;
 ZEND_TLS uint64_t tt_thr_rate;       /* sample probability scaled to 2^32 */
 ZEND_TLS uint64_t tt_thr_saturated;
 ZEND_TLS uint64_t tt_saturate_after;
+ZEND_TLS uintptr_t tt_epoch;         /* never 0, so a zeroed cache slot never matches */
+
+static int tt_slot = -1;             /* first of 2 op_array extension handles */
 
 static inline uint32_t tt_rand32(void)
 {
@@ -73,7 +83,7 @@ static uint64_t tt_scale(double p)
 	return (uint64_t)(p * 4294967296.0);
 }
 
-static inline void tt_stack_push(zend_execute_data *ex, bool sampled)
+static inline void tt_stack_push(zend_execute_data *ex, tt_func *f)
 {
 	tt_stack *s = &tt_stk;
 	if (UNEXPECTED(s->len == s->cap)) {
@@ -90,29 +100,45 @@ static inline void tt_stack_push(zend_execute_data *ex, bool sampled)
 		s->cap = ncap;
 	}
 	s->v[s->len].ex = ex;
-	s->v[s->len].sampled = sampled;
+	s->v[s->len].f = f;
+	s->v[s->len].epoch = tt_epoch;
 	s->len++;
 }
 
-/* Returns the sampling decision recorded by begin (false if unknown). */
-static inline bool tt_stack_pop(zend_execute_data *ex)
+/* Pops the entry pushed by begin into *out. Returns false if unknown. */
+static inline bool tt_stack_pop(zend_execute_data *ex, tt_frame *out)
 {
 	tt_stack *s = &tt_stk;
 	size_t n = s->len;
 	if (EXPECTED(n && s->v[n - 1].ex == ex)) {
 		s->len = n - 1;
-		return s->v[n - 1].sampled;
+		*out = s->v[n - 1];
+		return true;
 	}
 	/* non-LIFO (fibers): find the newest matching entry and close the gap */
 	while (n-- > 0) {
 		if (s->v[n].ex == ex) {
-			bool sampled = s->v[n].sampled;
+			*out = s->v[n];
 			memmove(&s->v[n], &s->v[n + 1], (s->len - n - 1) * sizeof(tt_frame));
 			s->len--;
-			return sampled;
+			return true;
 		}
 	}
 	return false;
+}
+
+static zend_always_inline tt_func *tt_func_of(zend_function *fn)
+{
+	void **rtc = RUN_TIME_CACHE(&fn->op_array);
+	if (EXPECTED(rtc && rtc[tt_slot + 1] == (void *)tt_epoch)) {
+		return rtc[tt_slot];
+	}
+	tt_func *f = tt_registry_func(fn);
+	if (rtc) {
+		rtc[tt_slot] = f;
+		rtc[tt_slot + 1] = (void *)tt_epoch;
+	}
+	return f;
 }
 
 static inline void tt_observe(tt_acc **slot, zval *z)
@@ -196,7 +222,7 @@ static void tt_begin(zend_execute_data *ex)
 		}
 	}
 
-	tt_func *f = tt_registry_func(fn);
+	tt_func *f = tt_func_of(fn);
 	f->calls++;
 	bool sampled = tt_should_sample(f);
 	if (sampled) {
@@ -204,7 +230,7 @@ static void tt_begin(zend_execute_data *ex)
 		tt_observe_args(f, ex);
 	}
 	if (EXPECTED(!(fn->common.fn_flags & ZEND_ACC_GENERATOR))) {
-		tt_stack_push(ex, sampled);
+		tt_stack_push(ex, sampled ? f : NULL);
 	}
 }
 
@@ -218,11 +244,13 @@ static void tt_end(zend_execute_data *ex, zval *retval)
 	if (UNEXPECTED(fn->common.fn_flags & ZEND_ACC_GENERATOR)) {
 		return;
 	}
-	if (!tt_stack_pop(ex) || retval == NULL) {
+	tt_frame fr;
+	if (!tt_stack_pop(ex, &fr) || !fr.f || retval == NULL) {
 		return; /* not sampled, or left via exception / exit */
 	}
 
-	tt_func *f = tt_registry_func(fn);
+	/* registry reset since begin (typetrace_flush() in the body): fr.f is freed */
+	tt_func *f = EXPECTED(fr.epoch == tt_epoch) ? fr.f : tt_func_of(fn);
 	zend_op_array *op = &fn->op_array;
 
 	tt_observe(&f->ret, retval);
@@ -259,7 +287,14 @@ static zend_observer_fcall_handlers tt_init(zend_execute_data *ex)
 
 void tt_observer_minit(void)
 {
+	tt_slot = zend_get_op_array_extension_handles("typetrace", 2);
 	zend_observer_fcall_register(tt_init);
+}
+
+void tt_observer_cache_clear(void)
+{
+	tt_epoch++;
+	if (tt_epoch == 0) tt_epoch = 1;
 }
 
 void tt_observer_rinit(void)
@@ -269,6 +304,7 @@ void tt_observer_rinit(void)
 	s->v = s->inl;
 	s->cap = TT_STACK_INLINE;
 	s->len = 0;
+	tt_observer_cache_clear();
 
 	tt_limits_from_ini(&tt_lim);
 	tt_thr_rate = tt_scale(TT_G(sample_rate));

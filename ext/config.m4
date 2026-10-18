@@ -10,5 +10,5 @@ if test "$PHP_TYPETRACE" != "no"; then
   AC_DEFINE(HAVE_TYPETRACE, 1, [Have typetrace])
   PHP_NEW_EXTENSION(typetrace,
     [typetrace.c registry.c accum.c observer.c props.c report.c],
-    $ext_shared,, [-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -Wall -Wextra -Wno-unused-parameter])
+    $ext_shared,, [-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -Wall -Wextra -Wno-unused-parameter -fvisibility=hidden])
 fi

@@ -6,8 +6,8 @@
  * nothing request-bound is ever retained.
  *
  * Design notes where the schema is silent:
- *  - Literal set keys are "i:<dec>", "s:<bytes>", "f:<16 hex digits of IEEE bits>", "e:Class::CASE".
- *    -0.0 is normalised to 0.0 before keying.
+ *  - Literal sets: ints keyed by value, strings by their bytes, floats / enums in a third table
+ *    as "f:<16 hex digits of IEEE bits>" / "e:Class::CASE". -0.0 is normalised to 0.0 before keying.
  *  - JSON literal order: kind (int, string, float, enum), then value.
  *  - Floats are written with smart_str_append_double(precision -1, zero_fraction true): shortest
  *    round-trip representation, integral floats render as "3.0" so json_decode yields a float.
@@ -55,6 +55,9 @@ static const char *tt_utf8_clean(const char *k, size_t *len, char **tofree)
 {
 	size_t n = *len, i = 0;
 	*tofree = NULL;
+	while (i < n && (unsigned char)k[i] < 0x80) {
+		i++;
+	}
 	while (i < n) {
 		size_t l = tt_utf8_seq(k, i, n);
 		if (!l) break;
@@ -100,15 +103,21 @@ static HashTable *tt_counts_new(void)
 	return ht;
 }
 
-/* key -> count (IS_LONG) */
+/* key -> count (IS_LONG). Stored keys are always valid UTF-8, so a raw hit is an exact hit and
+ * only a miss pays for tt_utf8_clean. */
 static void tt_counts_add(HashTable **htp, const char *k, size_t len, uint64_t by)
 {
 	char *tmp;
+	zval *z;
+	if (*htp && (z = zend_hash_str_find(*htp, k, len))) {
+		Z_LVAL_P(z) += (zend_long)by;
+		return;
+	}
 	k = tt_utf8_clean(k, &len, &tmp);
 	if (!*htp) {
 		*htp = tt_counts_new();
 	}
-	zval *z = zend_hash_str_find(*htp, k, len);
+	z = tmp ? zend_hash_str_find(*htp, k, len) : NULL;
 	if (z) {
 		Z_LVAL_P(z) += (zend_long)by;
 	} else {
@@ -173,12 +182,16 @@ static void tt_shape_entry_dtor(zval *zv)
 static tt_shape_entry *tt_shape_get(tt_shape *sh, const char *k, size_t len)
 {
 	char *tmp;
+	zval *z;
+	if (sh->keys && (z = zend_hash_str_find(sh->keys, k, len))) {
+		return Z_PTR_P(z);   /* raw hit is exact, see tt_counts_add */
+	}
 	k = tt_utf8_clean(k, &len, &tmp);
 	if (!sh->keys) {
 		sh->keys = pemalloc(sizeof(HashTable), 1);
 		zend_hash_init(sh->keys, 8, NULL, tt_shape_entry_dtor, 1);
 	}
-	zval *z = zend_hash_str_find(sh->keys, k, len);
+	z = tmp ? zend_hash_str_find(sh->keys, k, len) : NULL;
 	tt_shape_entry *e;
 	if (z) {
 		e = Z_PTR_P(z);
@@ -215,21 +228,76 @@ void tt_acc_free(tt_acc *acc)
 	tt_ht_free(acc->a.shape.keys);
 	tt_ht_free(acc->o.classes);
 	tt_ht_free(acc->r.types);
-	tt_ht_free(acc->lit.values);
+	tt_ht_free(acc->lit.ints);
+	tt_ht_free(acc->lit.strs);
+	tt_ht_free(acc->lit.other);
 	pefree(acc, 1);
 }
 
 /* {{{ observe */
 static void tt_lit_overflow(tt_acc *acc)
 {
-	acc->lit.overflow = true;
-	tt_ht_free(acc->lit.values);
-	acc->lit.values = NULL;
+	tt_literal_stats *l = &acc->lit;
+	l->overflow = true;
+	tt_ht_free(l->ints);
+	tt_ht_free(l->strs);
+	tt_ht_free(l->other);
+	l->ints = l->strs = l->other = NULL;
 }
 
-static void tt_lit_add(tt_acc *acc, const char *k, size_t len, const tt_limits *lim)
+static uint32_t tt_lit_count(const tt_literal_stats *l)
 {
-	tt_capped_add(&acc->lit.values, &acc->lit.overflow, lim->literal_cap, k, len);
+	return (l->ints ? zend_hash_num_elements(l->ints) : 0)
+		+ (l->strs ? zend_hash_num_elements(l->strs) : 0)
+		+ (l->other ? zend_hash_num_elements(l->other) : 0);
+}
+
+/* Call after inserting a new distinct value. */
+static void tt_lit_check_cap(tt_acc *acc, uint32_t cap)
+{
+	if (tt_lit_count(&acc->lit) > cap) {
+		tt_lit_overflow(acc);
+	}
+}
+
+static void tt_lit_add_int(tt_acc *acc, zend_long v, uint64_t by, uint32_t cap)
+{
+	HashTable *ht = acc->lit.ints;
+	zval *z;
+	if (EXPECTED(ht) && (z = zend_hash_index_find(ht, (zend_ulong)v))) {
+		Z_LVAL_P(z) += (zend_long)by;
+		return;
+	}
+	if (!ht) {
+		ht = acc->lit.ints = tt_counts_new();
+		zend_hash_real_init_mixed(ht);   /* Bucket-based, like every other table here */
+	}
+	zval zv;
+	ZVAL_LONG(&zv, (zend_long)by);
+	zend_hash_index_add_new(ht, (zend_ulong)v, &zv);
+	tt_lit_check_cap(acc, cap);
+}
+
+/* String literal: str may be request-bound; the cached hash makes a hit cheap. */
+static void tt_lit_add_str(tt_acc *acc, zend_string *str, const tt_limits *lim)
+{
+	zval *z;
+	if (EXPECTED(acc->lit.strs) && (z = zend_hash_find(acc->lit.strs, str))) {
+		Z_LVAL_P(z)++;   /* raw hit is exact, see tt_counts_add */
+		return;
+	}
+	tt_counts_add(&acc->lit.strs, ZSTR_VAL(str), ZSTR_LEN(str), 1);
+	tt_lit_check_cap(acc, lim->literal_cap);
+}
+
+/* Float / enum literal by encoded key. */
+static void tt_lit_add_other(tt_acc *acc, const char *k, size_t len, const tt_limits *lim)
+{
+	uint32_t before = acc->lit.other ? zend_hash_num_elements(acc->lit.other) : 0;
+	tt_counts_add(&acc->lit.other, k, len, 1);
+	if (zend_hash_num_elements(acc->lit.other) != before) {
+		tt_lit_check_cap(acc, lim->literal_cap);
+	}
 }
 
 static void tt_observe_long(tt_acc *acc, zend_long v, const tt_limits *lim)
@@ -248,9 +316,7 @@ static void tt_observe_long(tt_acc *acc, zend_long v, const tt_limits *lim)
 	else s->neg++;
 
 	if (!acc->lit.overflow) {
-		char buf[32];
-		int len = snprintf(buf, sizeof(buf), "i:" ZEND_LONG_FMT, v);
-		tt_lit_add(acc, buf, (size_t)len, lim);
+		tt_lit_add_int(acc, v, 1, lim->literal_cap);
 	}
 }
 
@@ -280,11 +346,16 @@ static void tt_observe_double(tt_acc *acc, double d, const tt_limits *lim)
 	if (floor(d) == d) s->integral++; else s->frac++;
 
 	if (!acc->lit.overflow) {
-		char buf[32];
+		static const char hex[] = "0123456789abcdef";
+		char buf[18];
 		uint64_t bits;
 		memcpy(&bits, &d, sizeof(bits));
-		int len = snprintf(buf, sizeof(buf), "f:%016" PRIx64, bits);
-		tt_lit_add(acc, buf, (size_t)len, lim);
+		buf[0] = 'f';
+		buf[1] = ':';
+		for (int j = 17; j >= 2; j--, bits >>= 4) {
+			buf[j] = hex[bits & 0xf];
+		}
+		tt_lit_add_other(acc, buf, sizeof(buf), lim);
 	}
 }
 
@@ -324,9 +395,9 @@ static void tt_observe_string(tt_acc *acc, zend_string *str, const tt_limits *li
 		} else if (tt_is_ws((unsigned char)p[0]) || tt_is_ws((unsigned char)p[len - 1])) {
 			s->ws_numeric++;
 		} else if (type == IS_LONG) {
-			char buf[32];
-			int blen = snprintf(buf, sizeof(buf), ZEND_LONG_FMT, lval);
-			if ((size_t)blen == len && memcmp(buf, p, len) == 0) {
+			char buf[MAX_LENGTH_OF_LONG + 1];
+			char *c = zend_print_long_to_buf(buf + sizeof(buf) - 1, lval);
+			if ((size_t)(buf + sizeof(buf) - 1 - c) == len && memcmp(c, p, len) == 0) {
 				s->int_canon++;
 			} else {
 				s->int_noncanon++;
@@ -341,15 +412,7 @@ static void tt_observe_string(tt_acc *acc, zend_string *str, const tt_limits *li
 		if (len > lim->string_literal_max) {
 			tt_lit_overflow(acc);
 		} else {
-			char stackbuf[256];
-			char *buf = len + 2 <= sizeof(stackbuf) ? stackbuf : emalloc(len + 2);
-			buf[0] = 's';
-			buf[1] = ':';
-			memcpy(buf + 2, p, len);
-			tt_lit_add(acc, buf, len + 2, lim);
-			if (buf != stackbuf) {
-				efree(buf);
-			}
+			tt_lit_add_str(acc, str, lim);
 		}
 	}
 }
@@ -358,15 +421,23 @@ static void tt_observe_object(tt_acc *acc, zend_object *obj, const tt_limits *li
 {
 	zend_class_entry *ce = obj->ce;
 	zend_string *cname = ce->name, *anon = NULL;
+	zval *hit;
 	acc->o.n++;
-	if (UNEXPECTED(memchr(ZSTR_VAL(cname), '\0', ZSTR_LEN(cname)))) {
-		cname = anon = tt_class_name(ce);	/* anonymous class */
-	}
-	tt_capped_add(&acc->o.classes, &acc->o.overflow, lim->class_cap,
-		ZSTR_VAL(cname), ZSTR_LEN(cname));
-
-	if (anon) {
-		zend_string_release(anon);
+	if (acc->o.overflow) {
+		/* nothing to count */
+	} else if (acc->o.classes && (hit = zend_hash_find(acc->o.classes, cname))) {
+		/* exact hit via the cached hash of the class name; an anonymous class name contains
+		 * a NUL and can never equal a stored (schema) name */
+		Z_LVAL_P(hit)++;
+	} else {
+		if (UNEXPECTED(memchr(ZSTR_VAL(cname), '\0', ZSTR_LEN(cname)))) {
+			cname = anon = tt_class_name(ce);	/* anonymous class */
+		}
+		tt_capped_add(&acc->o.classes, &acc->o.overflow, lim->class_cap,
+			ZSTR_VAL(cname), ZSTR_LEN(cname));
+		if (anon) {
+			zend_string_release(anon);
+		}
 	}
 	if (acc->lit.overflow) {
 		return;
@@ -381,7 +452,7 @@ static void tt_observe_object(tt_acc *acc, zend_object *obj, const tt_limits *li
 			memcpy(buf + 2, ZSTR_VAL(ce->name), clen);
 			memcpy(buf + 2 + clen, "::", 2);
 			memcpy(buf + 4 + clen, Z_STRVAL_P(name), nlen);
-			tt_lit_add(acc, buf, total, lim);
+			tt_lit_add_other(acc, buf, total, lim);
 			efree(buf);
 			return;
 		}
@@ -461,15 +532,15 @@ static void tt_observe_array(tt_acc *acc, HashTable *ht, uint32_t depth, const t
 				tt_shape_set_overflow(sh);
 			} else {
 				ZEND_HASH_FOREACH_KEY_VAL_IND(ht, h, key, zv) {
-					char kb[32];
+					char kb[MAX_LENGTH_OF_LONG + 1];
 					const char *kp;
 					size_t kl;
 					if (key) {
 						kp = ZSTR_VAL(key);
 						kl = ZSTR_LEN(key);
 					} else {
-						kl = (size_t)snprintf(kb, sizeof(kb), ZEND_LONG_FMT, (zend_long)h);
-						kp = kb;
+						kp = zend_print_long_to_buf(kb + sizeof(kb) - 1, (zend_long)h);
+						kl = (size_t)(kb + sizeof(kb) - 1 - kp);
 					}
 					tt_shape_entry *e = tt_shape_get(sh, kp, kl);
 					e->n++;
@@ -673,7 +744,20 @@ void tt_acc_merge(tt_acc *dst, const tt_acc *src, const tt_limits *lim)
 		}
 	}
 
-	tt_capped_merge(&dst->lit.values, &dst->lit.overflow, src->lit.values, src->lit.overflow, lim->literal_cap);
+	if (dst->lit.overflow || src->lit.overflow) {
+		tt_lit_overflow(dst);
+	} else {
+		zend_ulong h;
+		zval *zv;
+		if (src->lit.ints) {
+			ZEND_HASH_FOREACH_NUM_KEY_VAL(src->lit.ints, h, zv) {
+				tt_lit_add_int(dst, (zend_long)h, (uint64_t)Z_LVAL_P(zv), UINT32_MAX);
+			} ZEND_HASH_FOREACH_END();
+		}
+		if (src->lit.strs) tt_counts_merge(&dst->lit.strs, src->lit.strs);
+		if (src->lit.other) tt_counts_merge(&dst->lit.other, src->lit.other);
+		tt_lit_check_cap(dst, lim->literal_cap);
+	}
 }
 /* }}} */
 
@@ -758,14 +842,10 @@ static int tt_cmp_bucket_key(const void *x, const void *y)
 	return tt_cmp_str(a->key, b->key);
 }
 
+/* Rank within the "other" literal table: floats before enums. */
 static int tt_lit_rank(const zend_string *k)
 {
-	switch (ZSTR_VAL(k)[0]) {
-		case 'i': return 0;
-		case 's': return 1;
-		case 'f': return 2;
-		default:  return 3;
-	}
+	return ZSTR_VAL(k)[0] == 'f' ? 2 : 3;
 }
 
 static double tt_lit_double(const zend_string *k)
@@ -781,16 +861,17 @@ static int tt_cmp_bucket_lit(const void *x, const void *y)
 	const Bucket *a = *(const Bucket *const *)x, *b = *(const Bucket *const *)y;
 	int ra = tt_lit_rank(a->key), rb = tt_lit_rank(b->key);
 	if (ra != rb) return ra < rb ? -1 : 1;
-	if (ra == 0) {
-		zend_long la = ZEND_STRTOL(ZSTR_VAL(a->key) + 2, NULL, 10);
-		zend_long lb = ZEND_STRTOL(ZSTR_VAL(b->key) + 2, NULL, 10);
-		return la < lb ? -1 : (la > lb ? 1 : 0);
-	}
 	if (ra == 2) {
 		double da = tt_lit_double(a->key), db = tt_lit_double(b->key);
 		return da < db ? -1 : (da > db ? 1 : 0);
 	}
 	return tt_cmp_str(a->key, b->key);
+}
+
+static int tt_cmp_bucket_int(const void *x, const void *y)
+{
+	zend_long a = (zend_long)(*(const Bucket *const *)x)->h, b = (zend_long)(*(const Bucket *const *)y)->h;
+	return a < b ? -1 : (a > b ? 1 : 0);
 }
 
 static Bucket **tt_sorted_buckets(HashTable *ht, int (*cmp)(const void *, const void *), uint32_t *out_n)
@@ -825,42 +906,45 @@ static void tt_json_counts(smart_str *buf, HashTable *ht)
 	if (arr) efree(arr);
 }
 
-static void tt_json_literals(smart_str *buf, const tt_literal_stats *lit)
+static void tt_json_lit_values(smart_str *buf, HashTable *ht, int (*cmp)(const void *, const void *), bool *first)
 {
 	uint32_t n;
-	Bucket **arr = tt_sorted_buckets(lit->values, tt_cmp_bucket_lit, &n);
+	Bucket **arr = tt_sorted_buckets(ht, cmp, &n);
+	for (uint32_t i = 0; i < n; i++) {
+		const Bucket *p = arr[i];
+		if (!*first) smart_str_appendc(buf, ',');
+		*first = false;
+		if (!p->key) {
+			smart_str_appendl(buf, "[\"int\",", 7);
+			smart_str_append_long(buf, (zend_long)p->h);
+		} else if (cmp == tt_cmp_bucket_key) {
+			smart_str_appendl(buf, "[\"string\",", 10);
+			tt_json_string(buf, ZSTR_VAL(p->key), ZSTR_LEN(p->key));
+		} else if (tt_lit_rank(p->key) == 2) {
+			smart_str_appendl(buf, "[\"float\",", 9);
+			tt_json_double(buf, tt_lit_double(p->key));
+		} else {
+			smart_str_appendl(buf, "[\"enum\",", 8);
+			tt_json_string(buf, ZSTR_VAL(p->key) + 2, ZSTR_LEN(p->key) - 2);
+		}
+		smart_str_appendc(buf, ',');
+		tt_json_u64(buf, (uint64_t)Z_LVAL(p->val));
+		smart_str_appendc(buf, ']');
+	}
+	if (arr) efree(arr);
+}
+
+static void tt_json_literals(smart_str *buf, const tt_literal_stats *lit)
+{
+	bool first = true;
 	smart_str_appendl(buf, "{\"overflow\":", 12);
 	smart_str_appends(buf, lit->overflow ? "true" : "false");
 	smart_str_appendl(buf, ",\"values\":[", 11);
-	for (uint32_t i = 0; i < n; i++) {
-		const zend_string *k = arr[i]->key;
-		const char *v = ZSTR_VAL(k) + 2;
-		size_t vl = ZSTR_LEN(k) - 2;
-		if (i) smart_str_appendc(buf, ',');
-		switch (tt_lit_rank(k)) {
-			case 0:
-				smart_str_appendl(buf, "[\"int\",", 7);
-				smart_str_appendl(buf, v, vl);
-				break;
-			case 1:
-				smart_str_appendl(buf, "[\"string\",", 10);
-				tt_json_string(buf, v, vl);
-				break;
-			case 2:
-				smart_str_appendl(buf, "[\"float\",", 9);
-				tt_json_double(buf, tt_lit_double(k));
-				break;
-			default:
-				smart_str_appendl(buf, "[\"enum\",", 8);
-				tt_json_string(buf, v, vl);
-				break;
-		}
-		smart_str_appendc(buf, ',');
-		tt_json_u64(buf, (uint64_t)Z_LVAL(arr[i]->val));
-		smart_str_appendc(buf, ']');
-	}
+	/* kind order: int, string, float, enum */
+	tt_json_lit_values(buf, lit->ints, tt_cmp_bucket_int, &first);
+	tt_json_lit_values(buf, lit->strs, tt_cmp_bucket_key, &first);
+	tt_json_lit_values(buf, lit->other, tt_cmp_bucket_lit, &first);
 	smart_str_appendl(buf, "]}", 2);
-	if (arr) efree(arr);
 }
 
 static void tt_json_shape(smart_str *buf, const tt_shape *sh)
@@ -985,7 +1069,7 @@ void tt_acc_json(smart_str *buf, const tt_acc *acc)
 		smart_str_appendc(buf, '}');
 	}
 
-	if (acc->lit.overflow || (acc->lit.values && zend_hash_num_elements(acc->lit.values))) {
+	if (acc->lit.overflow || tt_lit_count(&acc->lit)) {
 		smart_str_appendl(buf, ",\"literals\":", 12);
 		tt_json_literals(buf, &acc->lit);
 	}

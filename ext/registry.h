@@ -50,7 +50,8 @@ void tt_registry_rinit(void);      /* request cache init */
 void tt_registry_rshutdown(void);  /* request cache destroy */
 
 /* Drop all aggregates (after a flush). Also clears request caches holding record
- * pointers: func_cache and the props.c cache (tt_props_cache_clear). */
+ * pointers: func_cache, the props.c cache (tt_props_cache_clear) and the run-time cache
+ * slots (tt_observer_cache_clear). */
 void tt_registry_reset(void);
 
 /* Get-or-create function record for op_array (user function). Uses request cache keyed by
