@@ -1,0 +1,82 @@
+Service.php
+  App\Service::$mode (line 14)
+    property [UNTYPED]
+      declared: (none)
+      observed: 'fast'|'slow' (samples: 2, confidence: low)
+  App\Service::$retries (line 14)
+    property [NARROW]
+      declared: native int
+      observed: 3 (samples: 2, confidence: low)
+  App\Service::$status (line 12)
+    property [NARROW]
+      declared: doc string
+      observed: 'done'|'new' (samples: 3, confidence: low)
+  App\Service::__construct (line 14)
+    param $mode [UNTYPED]
+      declared: (none)
+      observed: 'fast'|'slow' (samples: 2, confidence: low)
+  App\Service::deal (line 62)
+    param $suit [NARROW]
+      declared: native App\Suit
+      observed: App\Suit::Hearts|App\Suit::Spades (samples: 3, confidence: low)
+  App\Service::enable (line 31)
+    param $flag [BOOL]
+      declared: native int
+      observed: int<0,1> (samples: 4, confidence: low)
+      hint: looks like a boolean flag
+  App\Service::feed (line 66)
+    param $a [CONFLICT]
+      declared: native App\Animal
+      observed: App\Cat|App\Dog|App\Rock (samples: 3, confidence: low)
+      ! native type: App\Rock observed (1x)
+  App\Service::find (line 21)
+    param $id [CONFLICT]
+      declared: doc int
+      observed: numeric-string (samples: 4, confidence: low)
+      ! doc type: string observed outside declared type: '100', '12', '55', '7' (4x)
+      hint: canonical int strings - could be int
+    return [UNTYPED]
+      declared: (none)
+      observed: null (samples: 2, confidence: low)
+  App\Service::label (line 26)
+    param $text [NARROW]
+      declared: native string
+      observed: non-falsy-string (samples: 3, confidence: low)
+    return [NARROW]
+      declared: native string
+      observed: non-falsy-string (samples: 3, confidence: low)
+  App\Service::load (line 39)
+    param $ids [NARROW]
+      declared: doc array, native array
+      observed: non-empty-list<positive-int> (samples: 3, confidence: low)
+    return [NARROW]
+      declared: doc array, native array
+      observed: array{id: positive-int, name: non-falsy-string, tags?: non-empty-list<non-falsy-string>} (samples: 3, confidence: low)
+  App\Service::pet (line 71)
+    param $p [CONFLICT]
+      declared: doc App\Pet
+      observed: App\Cat|App\Dog (samples: 2, confidence: low)
+      ! doc type: App\Cat observed (1x)
+  App\Service::ratio (line 57)
+    param $x [NUMERIC]
+      declared: native float
+      observed: float (samples: 3, confidence: low)
+      hint: integral floats - could be int
+    return [NUMERIC]
+      declared: native float
+      observed: float (samples: 3, confidence: low)
+      hint: integral floats - could be int
+  App\Service::sort (line 44)
+    param $dir [NARROW]
+      declared: native string
+      observed: 'asc'|'desc' (samples: 3, confidence: low)
+  App\Service::total (line 52)
+    param $xs [NARROW]
+      declared: doc list<int>, native array
+      observed: non-empty-list<positive-int> (samples: 3, confidence: low)
+    return [CONFLICT]
+      declared: doc string
+      observed: positive-int (samples: 3, confidence: low)
+      ! doc type: int observed outside declared type: 3, 5, 7 (3x)
+
+19 finding(s) (bool: 1, conflict: 4, narrow: 9, numeric: 2, untyped: 3)

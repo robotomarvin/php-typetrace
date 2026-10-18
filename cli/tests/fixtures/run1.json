@@ -1,0 +1,1310 @@
+{
+    "schema": 1,
+    "generator": "typetrace/0.1.0",
+    "php": "8.5.11",
+    "sapi": "cli",
+    "pid": 111,
+    "started": 1760000000.0,
+    "finished": 1760000010.0,
+    "requests": 1,
+    "config": {
+        "array_sample": 32,
+        "array_depth": 3,
+        "literal_cap": 16,
+        "class_cap": 64,
+        "shape_cap": 32,
+        "string_literal_max": 64,
+        "sample_rate": 1.0,
+        "saturate_after": 0
+    },
+    "functions": {
+        "App\\Service::find": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "find",
+            "file": "{{APP}}/Service.php",
+            "line": 21,
+            "line_end": 24,
+            "calls": 3,
+            "sampled": 3,
+            "params": [
+                {
+                    "name": "id",
+                    "position": 0,
+                    "declared": null,
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 3,
+                        "string": {
+                            "n": 3,
+                            "empty": 0,
+                            "zero": 0,
+                            "one": 0,
+                            "int": 3,
+                            "int_noncanon": 0,
+                            "float": 0,
+                            "ws_numeric": 0,
+                            "other": 0,
+                            "len_min": 1,
+                            "len_max": 3
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "string",
+                                    "100",
+                                    1
+                                ],
+                                [
+                                    "string",
+                                    "12",
+                                    1
+                                ],
+                                [
+                                    "string",
+                                    "7",
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": null,
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 1,
+                    "null": 1
+                }
+            }
+        },
+        "App\\Service::label": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "label",
+            "file": "{{APP}}/Service.php",
+            "line": 26,
+            "line_end": 29,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "text",
+                    "position": 0,
+                    "declared": "string",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "string": {
+                            "n": 2,
+                            "empty": 0,
+                            "zero": 0,
+                            "one": 0,
+                            "int": 0,
+                            "int_noncanon": 0,
+                            "float": 0,
+                            "ws_numeric": 0,
+                            "other": 2,
+                            "len_min": 5,
+                            "len_max": 5
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "string",
+                                    "hello",
+                                    1
+                                ],
+                                [
+                                    "string",
+                                    "world",
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "string",
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 2,
+                    "string": {
+                        "n": 2,
+                        "empty": 0,
+                        "zero": 0,
+                        "one": 0,
+                        "int": 0,
+                        "int_noncanon": 0,
+                        "float": 0,
+                        "ws_numeric": 0,
+                        "other": 2,
+                        "len_min": 5,
+                        "len_max": 5
+                    },
+                    "literals": {
+                        "overflow": false,
+                        "values": [
+                            [
+                                "string",
+                                "hello",
+                                1
+                            ],
+                            [
+                                "string",
+                                "world",
+                                1
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "App\\Service::enable": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "enable",
+            "file": "{{APP}}/Service.php",
+            "line": 31,
+            "line_end": 34,
+            "calls": 3,
+            "sampled": 3,
+            "params": [
+                {
+                    "name": "flag",
+                    "position": 0,
+                    "declared": "int",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 3,
+                        "int": {
+                            "n": 3,
+                            "zero": 1,
+                            "one": 2,
+                            "pos": 0,
+                            "neg": 0,
+                            "min": 0,
+                            "max": 1
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "int",
+                                    0,
+                                    1
+                                ],
+                                [
+                                    "int",
+                                    1,
+                                    2
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "void",
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        },
+        "App\\Service::load": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "load",
+            "file": "{{APP}}/Service.php",
+            "line": 39,
+            "line_end": 42,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "ids",
+                    "position": 0,
+                    "declared": "array",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "array": {
+                            "n": 2,
+                            "empty": 0,
+                            "list": 2,
+                            "map": 0,
+                            "count_min": 1,
+                            "count_max": 3,
+                            "truncated": false,
+                            "keys": {
+                                "n": 4,
+                                "int": {
+                                    "n": 4,
+                                    "zero": 2,
+                                    "one": 1,
+                                    "pos": 1,
+                                    "neg": 0,
+                                    "min": 0,
+                                    "max": 2
+                                },
+                                "literals": {
+                                    "overflow": false,
+                                    "values": [
+                                        [
+                                            "int",
+                                            0,
+                                            2
+                                        ],
+                                        [
+                                            "int",
+                                            1,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            2,
+                                            1
+                                        ]
+                                    ]
+                                }
+                            },
+                            "values": {
+                                "n": 4,
+                                "int": {
+                                    "n": 4,
+                                    "zero": 0,
+                                    "one": 1,
+                                    "pos": 3,
+                                    "neg": 0,
+                                    "min": 1,
+                                    "max": 4
+                                },
+                                "literals": {
+                                    "overflow": false,
+                                    "values": [
+                                        [
+                                            "int",
+                                            1,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            2,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            3,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            4,
+                                            1
+                                        ]
+                                    ]
+                                }
+                            },
+                            "shape": null
+                        },
+                        "literals": {
+                            "overflow": true,
+                            "values": []
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "array",
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 2,
+                    "array": {
+                        "n": 2,
+                        "empty": 0,
+                        "list": 0,
+                        "map": 2,
+                        "count_min": 2,
+                        "count_max": 3,
+                        "truncated": false,
+                        "keys": {
+                            "n": 5,
+                            "string": {
+                                "n": 5,
+                                "empty": 0,
+                                "zero": 0,
+                                "one": 0,
+                                "int": 0,
+                                "int_noncanon": 0,
+                                "float": 0,
+                                "ws_numeric": 0,
+                                "other": 5,
+                                "len_min": 2,
+                                "len_max": 4
+                            },
+                            "literals": {
+                                "overflow": false,
+                                "values": [
+                                    [
+                                        "string",
+                                        "id",
+                                        2
+                                    ],
+                                    [
+                                        "string",
+                                        "name",
+                                        2
+                                    ],
+                                    [
+                                        "string",
+                                        "tags",
+                                        1
+                                    ]
+                                ]
+                            }
+                        },
+                        "values": {
+                            "n": 5,
+                            "int": {
+                                "n": 2,
+                                "zero": 0,
+                                "one": 1,
+                                "pos": 1,
+                                "neg": 0,
+                                "min": 1,
+                                "max": 2
+                            },
+                            "string": {
+                                "n": 2,
+                                "empty": 0,
+                                "zero": 0,
+                                "one": 0,
+                                "int": 0,
+                                "int_noncanon": 0,
+                                "float": 0,
+                                "ws_numeric": 0,
+                                "other": 2,
+                                "len_min": 1,
+                                "len_max": 1
+                            },
+                            "array": {
+                                "n": 1,
+                                "empty": 0,
+                                "list": 1,
+                                "map": 0,
+                                "count_min": 1,
+                                "count_max": 1,
+                                "truncated": false,
+                                "keys": {
+                                    "n": 1,
+                                    "int": {
+                                        "n": 1,
+                                        "zero": 1,
+                                        "one": 0,
+                                        "pos": 0,
+                                        "neg": 0,
+                                        "min": 0,
+                                        "max": 0
+                                    },
+                                    "literals": {
+                                        "overflow": false,
+                                        "values": [
+                                            [
+                                                "int",
+                                                0,
+                                                1
+                                            ]
+                                        ]
+                                    }
+                                },
+                                "values": {
+                                    "n": 1,
+                                    "string": {
+                                        "n": 1,
+                                        "empty": 0,
+                                        "zero": 0,
+                                        "one": 0,
+                                        "int": 0,
+                                        "int_noncanon": 0,
+                                        "float": 0,
+                                        "ws_numeric": 0,
+                                        "other": 1,
+                                        "len_min": 1,
+                                        "len_max": 1
+                                    },
+                                    "literals": {
+                                        "overflow": false,
+                                        "values": [
+                                            [
+                                                "string",
+                                                "x",
+                                                1
+                                            ]
+                                        ]
+                                    }
+                                },
+                                "shape": null
+                            },
+                            "literals": {
+                                "overflow": true,
+                                "values": []
+                            }
+                        },
+                        "shape": {
+                            "n": 2,
+                            "overflow": false,
+                            "keys": {
+                                "id": {
+                                    "n": 2,
+                                    "acc": {
+                                        "n": 2,
+                                        "int": {
+                                            "n": 2,
+                                            "zero": 0,
+                                            "one": 1,
+                                            "pos": 1,
+                                            "neg": 0,
+                                            "min": 1,
+                                            "max": 2
+                                        },
+                                        "literals": {
+                                            "overflow": false,
+                                            "values": [
+                                                [
+                                                    "int",
+                                                    1,
+                                                    1
+                                                ],
+                                                [
+                                                    "int",
+                                                    2,
+                                                    1
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                },
+                                "name": {
+                                    "n": 2,
+                                    "acc": {
+                                        "n": 2,
+                                        "string": {
+                                            "n": 2,
+                                            "empty": 0,
+                                            "zero": 0,
+                                            "one": 0,
+                                            "int": 0,
+                                            "int_noncanon": 0,
+                                            "float": 0,
+                                            "ws_numeric": 0,
+                                            "other": 2,
+                                            "len_min": 1,
+                                            "len_max": 1
+                                        },
+                                        "literals": {
+                                            "overflow": false,
+                                            "values": [
+                                                [
+                                                    "string",
+                                                    "a",
+                                                    1
+                                                ],
+                                                [
+                                                    "string",
+                                                    "b",
+                                                    1
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                },
+                                "tags": {
+                                    "n": 1,
+                                    "acc": {
+                                        "n": 1,
+                                        "array": {
+                                            "n": 1,
+                                            "empty": 0,
+                                            "list": 1,
+                                            "map": 0,
+                                            "count_min": 1,
+                                            "count_max": 1,
+                                            "truncated": false,
+                                            "keys": {
+                                                "n": 1,
+                                                "int": {
+                                                    "n": 1,
+                                                    "zero": 1,
+                                                    "one": 0,
+                                                    "pos": 0,
+                                                    "neg": 0,
+                                                    "min": 0,
+                                                    "max": 0
+                                                },
+                                                "literals": {
+                                                    "overflow": false,
+                                                    "values": [
+                                                        [
+                                                            "int",
+                                                            0,
+                                                            1
+                                                        ]
+                                                    ]
+                                                }
+                                            },
+                                            "values": {
+                                                "n": 1,
+                                                "string": {
+                                                    "n": 1,
+                                                    "empty": 0,
+                                                    "zero": 0,
+                                                    "one": 0,
+                                                    "int": 0,
+                                                    "int_noncanon": 0,
+                                                    "float": 0,
+                                                    "ws_numeric": 0,
+                                                    "other": 1,
+                                                    "len_min": 1,
+                                                    "len_max": 1
+                                                },
+                                                "literals": {
+                                                    "overflow": false,
+                                                    "values": [
+                                                        [
+                                                            "string",
+                                                            "x",
+                                                            1
+                                                        ]
+                                                    ]
+                                                }
+                                            },
+                                            "shape": null
+                                        },
+                                        "literals": {
+                                            "overflow": true,
+                                            "values": []
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "literals": {
+                        "overflow": true,
+                        "values": []
+                    }
+                }
+            }
+        },
+        "App\\Service::sort": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "sort",
+            "file": "{{APP}}/Service.php",
+            "line": 44,
+            "line_end": 47,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "dir",
+                    "position": 0,
+                    "declared": "string",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "string": {
+                            "n": 2,
+                            "empty": 0,
+                            "zero": 0,
+                            "one": 0,
+                            "int": 0,
+                            "int_noncanon": 0,
+                            "float": 0,
+                            "ws_numeric": 0,
+                            "other": 2,
+                            "len_min": 3,
+                            "len_max": 4
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "string",
+                                    "asc",
+                                    1
+                                ],
+                                [
+                                    "string",
+                                    "desc",
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "void",
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        },
+        "App\\Service::total": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "total",
+            "file": "{{APP}}/Service.php",
+            "line": 52,
+            "line_end": 55,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "xs",
+                    "position": 0,
+                    "declared": "array",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "array": {
+                            "n": 2,
+                            "empty": 0,
+                            "list": 2,
+                            "map": 0,
+                            "count_min": 2,
+                            "count_max": 2,
+                            "truncated": false,
+                            "keys": {
+                                "n": 4,
+                                "int": {
+                                    "n": 4,
+                                    "zero": 2,
+                                    "one": 2,
+                                    "pos": 0,
+                                    "neg": 0,
+                                    "min": 0,
+                                    "max": 1
+                                },
+                                "literals": {
+                                    "overflow": false,
+                                    "values": [
+                                        [
+                                            "int",
+                                            0,
+                                            2
+                                        ],
+                                        [
+                                            "int",
+                                            1,
+                                            2
+                                        ]
+                                    ]
+                                }
+                            },
+                            "values": {
+                                "n": 4,
+                                "int": {
+                                    "n": 4,
+                                    "zero": 0,
+                                    "one": 1,
+                                    "pos": 3,
+                                    "neg": 0,
+                                    "min": 1,
+                                    "max": 4
+                                },
+                                "literals": {
+                                    "overflow": false,
+                                    "values": [
+                                        [
+                                            "int",
+                                            1,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            2,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            3,
+                                            1
+                                        ],
+                                        [
+                                            "int",
+                                            4,
+                                            1
+                                        ]
+                                    ]
+                                }
+                            },
+                            "shape": null
+                        },
+                        "literals": {
+                            "overflow": true,
+                            "values": []
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": null,
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 2,
+                    "int": {
+                        "n": 2,
+                        "zero": 0,
+                        "one": 0,
+                        "pos": 2,
+                        "neg": 0,
+                        "min": 3,
+                        "max": 7
+                    },
+                    "literals": {
+                        "overflow": false,
+                        "values": [
+                            [
+                                "int",
+                                3,
+                                1
+                            ],
+                            [
+                                "int",
+                                7,
+                                1
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "App\\Service::ratio": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "ratio",
+            "file": "{{APP}}/Service.php",
+            "line": 57,
+            "line_end": 60,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "x",
+                    "position": 0,
+                    "declared": "float",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "float": {
+                            "n": 2,
+                            "integral": 2,
+                            "frac": 0,
+                            "nonfinite": 0,
+                            "min": 1.0,
+                            "max": 2.0
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "float",
+                                    1.0,
+                                    1
+                                ],
+                                [
+                                    "float",
+                                    2.0,
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "float",
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 2,
+                    "float": {
+                        "n": 2,
+                        "integral": 2,
+                        "frac": 0,
+                        "nonfinite": 0,
+                        "min": 1.0,
+                        "max": 2.0
+                    },
+                    "literals": {
+                        "overflow": false,
+                        "values": [
+                            [
+                                "float",
+                                1.0,
+                                1
+                            ],
+                            [
+                                "float",
+                                2.0,
+                                1
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "App\\Service::deal": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "deal",
+            "file": "{{APP}}/Service.php",
+            "line": 62,
+            "line_end": 65,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "suit",
+                    "position": 0,
+                    "declared": "App\\Suit",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "object": {
+                            "n": 2,
+                            "classes": {
+                                "App\\Suit": 2
+                            },
+                            "overflow": false
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "enum",
+                                    "App\\Suit::Hearts",
+                                    1
+                                ],
+                                [
+                                    "enum",
+                                    "App\\Suit::Spades",
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "void",
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        },
+        "App\\Service::feed": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "feed",
+            "file": "{{APP}}/Service.php",
+            "line": 66,
+            "line_end": 69,
+            "calls": 2,
+            "sampled": 2,
+            "params": [
+                {
+                    "name": "a",
+                    "position": 0,
+                    "declared": "App\\Animal",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 2,
+                        "object": {
+                            "n": 2,
+                            "classes": {
+                                "App\\Cat": 1,
+                                "App\\Dog": 1
+                            },
+                            "overflow": false
+                        },
+                        "literals": {
+                            "overflow": true,
+                            "values": []
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "void",
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        },
+        "App\\Service::pet": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "pet",
+            "file": "{{APP}}/Service.php",
+            "line": 71,
+            "line_end": 74,
+            "calls": 1,
+            "sampled": 1,
+            "params": [
+                {
+                    "name": "p",
+                    "position": 0,
+                    "declared": null,
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 1,
+                        "object": {
+                            "n": 1,
+                            "classes": {
+                                "App\\Dog": 1
+                            },
+                            "overflow": false
+                        },
+                        "literals": {
+                            "overflow": true,
+                            "values": []
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "void",
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        },
+        "App\\Service::same": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "same",
+            "file": "{{APP}}/Service.php",
+            "line": 75,
+            "line_end": 78,
+            "calls": 3,
+            "sampled": 3,
+            "params": [
+                {
+                    "name": "n",
+                    "position": 0,
+                    "declared": "int",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 3,
+                        "int": {
+                            "n": 3,
+                            "zero": 0,
+                            "one": 1,
+                            "pos": 1,
+                            "neg": 1,
+                            "min": -3,
+                            "max": 5
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "int",
+                                    -3,
+                                    1
+                                ],
+                                [
+                                    "int",
+                                    1,
+                                    1
+                                ],
+                                [
+                                    "int",
+                                    5,
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": "int",
+                "by_ref": false,
+                "generator": false,
+                "acc": {
+                    "n": 3,
+                    "int": {
+                        "n": 3,
+                        "zero": 0,
+                        "one": 1,
+                        "pos": 1,
+                        "neg": 1,
+                        "min": -3,
+                        "max": 5
+                    },
+                    "literals": {
+                        "overflow": false,
+                        "values": [
+                            [
+                                "int",
+                                -3,
+                                1
+                            ],
+                            [
+                                "int",
+                                1,
+                                1
+                            ],
+                            [
+                                "int",
+                                5,
+                                1
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "App\\Service::__construct": {
+            "kind": "method",
+            "class": "App\\Service",
+            "name": "__construct",
+            "file": "{{APP}}/Service.php",
+            "line": 14,
+            "line_end": 17,
+            "calls": 1,
+            "sampled": 1,
+            "params": [
+                {
+                    "name": "mode",
+                    "position": 0,
+                    "declared": null,
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": {
+                        "n": 1,
+                        "string": {
+                            "n": 1,
+                            "empty": 0,
+                            "zero": 0,
+                            "one": 0,
+                            "int": 0,
+                            "int_noncanon": 0,
+                            "float": 0,
+                            "ws_numeric": 0,
+                            "other": 1,
+                            "len_min": 4,
+                            "len_max": 4
+                        },
+                        "literals": {
+                            "overflow": false,
+                            "values": [
+                                [
+                                    "string",
+                                    "fast",
+                                    1
+                                ]
+                            ]
+                        }
+                    },
+                    "defaulted": 0,
+                    "out": null
+                },
+                {
+                    "name": "retries",
+                    "position": 1,
+                    "declared": "int",
+                    "by_ref": false,
+                    "variadic": false,
+                    "optional": false,
+                    "acc": null,
+                    "defaulted": 0,
+                    "out": null
+                }
+            ],
+            "extra_args": null,
+            "return": {
+                "declared": null,
+                "by_ref": false,
+                "generator": false,
+                "acc": null
+            }
+        }
+    },
+    "properties": {
+        "App\\Service::$status": {
+            "class": "App\\Service",
+            "name": "status",
+            "static": false,
+            "declared": null,
+            "acc": {
+                "n": 2,
+                "string": {
+                    "n": 2,
+                    "empty": 0,
+                    "zero": 0,
+                    "one": 0,
+                    "int": 0,
+                    "int_noncanon": 0,
+                    "float": 0,
+                    "ws_numeric": 0,
+                    "other": 2,
+                    "len_min": 3,
+                    "len_max": 4
+                },
+                "literals": {
+                    "overflow": false,
+                    "values": [
+                        [
+                            "string",
+                            "done",
+                            1
+                        ],
+                        [
+                            "string",
+                            "new",
+                            1
+                        ]
+                    ]
+                }
+            },
+            "sources": {
+                "assign": 2
+            }
+        },
+        "App\\Service::$mode": {
+            "class": "App\\Service",
+            "name": "mode",
+            "static": false,
+            "declared": null,
+            "acc": {
+                "n": 1,
+                "string": {
+                    "n": 1,
+                    "empty": 0,
+                    "zero": 0,
+                    "one": 0,
+                    "int": 0,
+                    "int_noncanon": 0,
+                    "float": 0,
+                    "ws_numeric": 0,
+                    "other": 1,
+                    "len_min": 4,
+                    "len_max": 4
+                },
+                "literals": {
+                    "overflow": false,
+                    "values": [
+                        [
+                            "string",
+                            "fast",
+                            1
+                        ]
+                    ]
+                }
+            },
+            "sources": {
+                "assign": 1
+            }
+        },
+        "App\\Service::$retries": {
+            "class": "App\\Service",
+            "name": "retries",
+            "static": false,
+            "declared": "int",
+            "acc": {
+                "n": 1,
+                "int": {
+                    "n": 1,
+                    "zero": 0,
+                    "one": 0,
+                    "pos": 1,
+                    "neg": 0,
+                    "min": 3,
+                    "max": 3
+                },
+                "literals": {
+                    "overflow": false,
+                    "values": [
+                        [
+                            "int",
+                            3,
+                            1
+                        ]
+                    ]
+                }
+            },
+            "sources": {
+                "assign": 1
+            }
+        }
+    }
+}

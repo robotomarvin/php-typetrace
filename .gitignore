@@ -1,0 +1,19 @@
+# phpize build output
+ext/*
+!ext/*.c
+!ext/*.h
+ext/config.h
+!ext/config.m4
+!ext/config.w32
+!ext/tests/
+ext/tests/*
+!ext/tests/*.phpt
+!ext/tests/*.inc
+!ext/tests/fixtures/
+/cli/vendor/
+/cli/.phpunit.cache/
+*.json.tmp
+/out/
+!ext/stubs/
+ext/config.h
+.phpunit.result.cache
