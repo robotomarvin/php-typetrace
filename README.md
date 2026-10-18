@@ -156,9 +156,9 @@ rules.
 | Mode | ns/call | vs off |
 |---|---|---|
 | off | ~14 | 1x |
-| full sampling | ~215 | ~15x |
-| `saturate_after=1000` | ~60 | ~4x |
-| `sample_rate=0` (count only) | ~55 | ~4x |
+| full sampling | ~100 | ~7x |
+| `saturate_after=1000` | ~34 | ~2.4x |
+| `sample_rate=0` (count only) | ~32 | ~2.3x |
 
 This loop is a worst case: functions that do almost nothing. Real request handling is
 dominated by I/O and real work. For heavy test suites use `saturate_after=1000` or a

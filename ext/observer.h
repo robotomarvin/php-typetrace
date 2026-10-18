@@ -7,6 +7,9 @@
 void tt_observer_minit(void);
 void tt_observer_rinit(void);
 
+/* Invalidate cached tt_func* pointers (registry reset). Safe to call outside a request. */
+void tt_observer_cache_clear(void);
+
 /* Path filter (include/exclude INI), implemented in typetrace.c, shared with props.c. */
 bool tt_file_allowed(zend_string *filename);
 

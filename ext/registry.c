@@ -7,6 +7,7 @@
 #include "php_typetrace.h"
 #include "registry.h"
 #include "props.h"
+#include "observer.h"
 
 zend_string *tt_pstr(zend_string *s)
 {
@@ -96,6 +97,7 @@ void tt_registry_reset(void)
 		zend_hash_clean(&TT_G(func_cache));
 		tt_props_cache_clear();
 	}
+	tt_observer_cache_clear();
 	zend_hash_clean(&TT_G(functions));
 	zend_hash_clean(&TT_G(props));
 }
